@@ -3,32 +3,55 @@ package leituraSped;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.persistence.NoResultException;
 
 import com.epsilon.dao.MetadadosDB;
 import com.epsilon.dao.cadastro.LoteImportacaoSpedFiscalDao;
+import com.epsilon.dao.cadastro.ProdutoDao;
 import com.epsilon.dao.movimentacao.EquipamentoCFeDao;
 import com.epsilon.dao.movimentacao.ItensMovDiarioCFeDao;
 import com.epsilon.dao.movimentacao.NotaFiscalDao;
+import com.epsilon.dao.movimentacao.ReducaoZDao;
 import com.epsilon.handler.ImportaEfdIcms;
 import com.epsilon.model.cadastro.LoteImportacaoSpedFiscal;
+import com.epsilon.model.cadastro.OutrasUnid;
+import com.epsilon.model.cadastro.Produto;
 import com.epsilon.model.movimentacao.EquipamentoCFe;
 import com.epsilon.model.movimentacao.ItensMovDiarioCFe;
 import com.epsilon.model.movimentacao.NotaFiscal;
 import com.epsilon.model.movimentacao.ProdutoNotaFiscal;
+import com.epsilon.model.movimentacao.ReducaoZ;
 
+import modulos.efdicms.entidades.Reg0200;
+import modulos.efdicms.entidades.Reg0220;
 import modulos.efdicms.manager.LeitorEfdIcms;
 
 public class Importacao {
 
+	public static String linha(Produto prod) {
+		String lin = prod.getCodUtilizEstab();
+		for(OutrasUnid out : prod.getOutrasUnds()){
+		
+			    lin += "|";
+				lin += out.getUndEquivPadrao();
+		}
+		
+		return lin;
+	}
+	
 	public static void main(String[] args) {
 		
 		MetadadosDB banco = new MetadadosDB();
 		LoteImportacaoSpedFiscalDao loteDao = new LoteImportacaoSpedFiscalDao();
+		ProdutoDao daoProd = new ProdutoDao();
 		NotaFiscalDao nfDao = new NotaFiscalDao();
+		ReducaoZDao rdzDao = new ReducaoZDao();
 		EquipamentoCFeDao cfeDao = new EquipamentoCFeDao();
 		ItensMovDiarioCFeDao itensCfeDao = new  ItensMovDiarioCFeDao();
 		
-		String ano = "2021";
+		String ano = "2019";
 		String emp = "SELLENE";
 		String estab = "MEGADIET";
 		String cnpj  = "05329222000419";
@@ -83,8 +106,8 @@ public class Importacao {
 	    Path p12 = Paths.get("E:\\EMPRESAS".concat("\\").concat(emp).concat("\\").concat(estab).concat("\\SPED").concat("\\").concat(ano).concat("\\").concat(anomes12));
 	    
 
-	    Path p = p11;
-		Path x = x11;
+	    Path p = p2;
+		Path x = x2;
 		
 		LeitorEfdIcms leitor = new LeitorEfdIcms();
 		
@@ -110,29 +133,61 @@ public class Importacao {
 				leitor.incProd(id0200),leitor.incNFe(idC100),leitor.incRDZ(idC405),leitor.incTotParcRdz(idC420),
 				leitor.incTotEquipCFe(idC860), 0L );
 
-		LoteImportacaoSpedFiscal loteImportacao = imp.getLoteImportacao(leitor, 1L, 6L);
+		LoteImportacaoSpedFiscal loteImportacao = imp.getLoteImportacao(leitor, 1L, 2L);
 
-		loteDao.adiciona(loteImportacao);
-		
-		List<NotaFiscal>   notas1 =   imp.getNotasFiscaisTerceiros(leitor,1L,6L, leitor.incLoteImportacao(id0000));
-		List<NotaFiscal>   notas2 =   imp.getNotasFiscaisProprios(leitor,x.toString(),1L,6L, leitor.incLoteImportacao(id0000));
-		List<EquipamentoCFe> equipCfes = imp.getEquipamentosCFe(leitor, 1L,6L, leitor.incLoteImportacao(id0000));
-		List<ItensMovDiarioCFe> itensCfes =   imp.getItensCFe(leitor, x.toString(), 1L,6L, leitor.incLoteImportacao(id0000));
 		
 		
-		for(NotaFiscal nf :  notas1){			
-			nfDao.adiciona(nf);
-		}
+		List<Produto> produtosSped = imp.getProdutosSped(leitor,1L,2L);
+		produtosSped.addAll(imp.getProdutos());
+		List<Produto> collectProdutos = produtosSped.stream().distinct().collect(Collectors.toList());
 		
-        for(NotaFiscal nf :  notas2){			
-			nfDao.adiciona(nf);
+		List<NotaFiscal>   notas1 =   imp.getNotasFiscaisTerceiros(leitor,1L,2L, leitor.incLoteImportacao(id0000));
+		List<NotaFiscal>   notas2 =   imp.getNotasFiscaisProprios(leitor,x.toString(),1L,2L, leitor.incLoteImportacao(id0000));
+		List<EquipamentoCFe> equipCfes = imp.getEquipamentosCFe(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
+		List<ReducaoZ> reducoes = imp.getReducoes(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
+		List<ItensMovDiarioCFe> itensCfes =   imp.getItensCFe(leitor, x.toString(), 1L,2L, leitor.incLoteImportacao(id0000));
+		
+		
+		
+		if(!loteDao.listaTodos().contains(loteImportacao)){
+			loteDao.adiciona(loteImportacao);
+			
+			for(Produto prod :  collectProdutos){	
+				
+				if(daoProd.buscaPorCodigo(prod.getCodUtilizEstab()) == null) {
+					 daoProd.adiciona(prod);
+					 System.out.println("Cadastrando produto -> " + prod.getCodUtilizEstab());
+				}else if(linha(prod).equals(daoProd.produtoJoinOutUnidadeMedida(1L,2L,prod.getCodUtilizEstab())) == false
+						&&  daoProd.produtoJoinOutUnidadeMedida(1L,2L,prod.getCodUtilizEstab()).contains("NULL") == true){
+					
+					Produto buscaPorCodigo = daoProd.buscaPorCodigo(prod.getCodUtilizEstab());
+			    	daoProd.remove(buscaPorCodigo);
+			    	daoProd.atualiza(prod);
+			    	System.out.println("Alterando o produto -> " + prod.getCodUtilizEstab());
+				}
+
+			}
+		
+			for(NotaFiscal nf :  notas1){			
+				nfDao.adiciona(nf);
+			}		
+	        for(NotaFiscal nf :  notas2){			
+				nfDao.adiciona(nf);
+			}
+	        for(ReducaoZ rdz : reducoes){
+	        	rdzDao.adiciona(rdz);
+	        }
+			for(EquipamentoCFe equipCfe : equipCfes) {
+				cfeDao.adiciona(equipCfe);
+			}
+			for(ItensMovDiarioCFe cfe : itensCfes){
+				itensCfeDao.adiciona(cfe);
+			}
+			
+		}else {
+			System.out.println("Lote já importado!!!");
 		}
-		for(EquipamentoCFe equipCfe : equipCfes) {
-			cfeDao.adiciona(equipCfe);
-		}
-		for(ItensMovDiarioCFe cfe : itensCfes){
-			itensCfeDao.adiciona(cfe);
-		}
+
 		
 	}
 }

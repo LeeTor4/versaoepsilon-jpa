@@ -1,14 +1,22 @@
 package com.epsilon.model.cadastro;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 
 @Entity
@@ -35,6 +43,12 @@ public class Produto implements Serializable{
 	private Boolean desativado;
 	private String codigoTIPI;
 	private String cest;
+	
+	
+	@OneToMany(cascade = CascadeType.ALL)
+	@OnDelete(action = OnDeleteAction.CASCADE)
+	@JoinColumn(name="prod_id")
+	private List<OutrasUnid> outrasUnds = new ArrayList<OutrasUnid>();
 	
 	public Produto() {
 		
@@ -112,6 +126,19 @@ public class Produto implements Serializable{
 	public void setCest(String cest) {
 		this.cest = cest;
 	}
+	
+	public List<OutrasUnid> getOutrasUnds() {
+		return outrasUnds;
+	}
+
+	public void setOutrasUnds(List<OutrasUnid> outrasUnds) {
+		this.outrasUnds = outrasUnds;
+	}
+	
+	public void adicionaOutrasUnd(OutrasUnid outUnd) {
+		this.outrasUnds.add(outUnd);
+	}
+
 	
 	@Override
 	public int hashCode() {

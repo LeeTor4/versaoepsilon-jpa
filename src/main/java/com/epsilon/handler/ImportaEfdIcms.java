@@ -7,15 +7,18 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.xml.bind.JAXBException;
 
 import com.epsilon.dao.MetadadosDB;
 import com.epsilon.dao.cadastro.EquipamentoEcfDao;
+import com.epsilon.dao.cadastro.OutrasUnidDao;
+import com.epsilon.dao.cadastro.ProdutoDao;
 import com.epsilon.model.cadastro.EquipamentoECF;
 import com.epsilon.model.cadastro.LoteImportacaoSpedFiscal;
+import com.epsilon.model.cadastro.OutrasUnid;
+import com.epsilon.model.cadastro.Produto;
 import com.epsilon.model.movimentacao.EquipamentoCFe;
 import com.epsilon.model.movimentacao.ItensMovDiario;
 import com.epsilon.model.movimentacao.ItensMovDiarioCFe;
@@ -24,12 +27,13 @@ import com.epsilon.model.movimentacao.ProdutoNotaFiscal;
 import com.epsilon.model.movimentacao.ReducaoZ;
 import com.epsilon.model.movimentacao.TotParciaisRDZ;
 import com.epsilon.model.movimentacao.TotalizadorDiarioCuponsFiscais;
-import com.epsilon.util.UtilsEConverters;
 import com.leetor4.handler.ParseDocXML;
 import com.leetor4.model.nfe.DocumentoFiscalEltronico;
 import com.leetor4.model.nfe.Produtos;
 
 import modulos.efdicms.entidades.Reg0000;
+import modulos.efdicms.entidades.Reg0200;
+import modulos.efdicms.entidades.Reg0220;
 import modulos.efdicms.entidades.RegC100;
 import modulos.efdicms.entidades.RegC170;
 import modulos.efdicms.entidades.RegC860;
@@ -38,6 +42,9 @@ import modulos.efdicms.manager.LeitorEfdIcms;
 public class ImportaEfdIcms {
 
 	private Set<String> listaProdutos = new LinkedHashSet<String>();
+	private List<Produto> produtos = new ArrayList<Produto>();
+	private ProdutoDao daoProd = new ProdutoDao();
+	
 	
 	public LoteImportacaoSpedFiscal getLoteImportacao(LeitorEfdIcms leitor, Long idEmp, Long idEst) {
 		LoteImportacaoSpedFiscal importacao = new LoteImportacaoSpedFiscal();
@@ -66,13 +73,44 @@ public class ImportaEfdIcms {
 	}
 	
 	
+	public List<Produto> getProdutosSped(LeitorEfdIcms leitor, Long idEmp, Long idEst) {
+		
+		List<Produto> retorno = new ArrayList<Produto>();
+        for(Reg0200 prod :  leitor.getRegs0200()){
+        	Produto p = new Produto();      	 
+			p.setIdEmp(idEmp);
+			p.setIdEst(idEst);
+			p.setCodUtilizEstab(prod.getCodItem());
+			p.setDescricao(prod.getDescrItem());
+			p.setUnidadedeMedidaPadrao(prod.getUnidInv());
+			p.setNcm(prod.getCodNcm());
+			p.setCodigodeBarras(prod.getCodBarra());
+			
+			for(Reg0220 out : prod.getOutrasUndMedidas()){
+				OutrasUnid outUnd = new OutrasUnid();
+			    outUnd.setIdPaiEmp(idEmp);
+			    outUnd.setIdPaiEst(idEst);
+			    
+			    //outUnd.setIdPai(idPaiReg0200(prod.getCodItem(),idEmp,idEst));
+			    outUnd.setCodProd(prod.getCodItem());
+			    outUnd.setUndMed(out.getUndConv());
+			    outUnd.setUndEquivPadrao(out.getFatConv());
+			    
+			    p.adicionaOutrasUnd(outUnd);
+			}
+			
+			
+				retorno.add(p);	
+			
+			
+        }
+        return retorno;
+	}
+	
 	public List<NotaFiscal> getNotasFiscaisTerceiros(LeitorEfdIcms leitor,Long idEmp,
 			Long idEst,Long lote) {
 		List<NotaFiscal> retorno = new ArrayList<NotaFiscal>();
 		MetadadosDB banco = new MetadadosDB();
-		
-		
-	       // Long contNF = banco.getIncremento("tb_notafiscal");
 			for (RegC100 nota : leitor.getRegsC100()) {
 				
 				if(nota.getIndEmit().equals("1")) {
@@ -128,6 +166,8 @@ public class ImportaEfdIcms {
 						nf.adicionaProdutoNota(prod);
 
 					}
+					
+					
 					retorno.add(nf);
 				}
 
@@ -220,8 +260,12 @@ public class ImportaEfdIcms {
 										prod.setValorBruto(BigDecimal.valueOf(Double.valueOf(pNF.getVlItem())));
 									}
 
-									System.out.println(pNF.getCodItem() + "|" + pNF.getCfop());
+									//System.out.println(pNF.getCodItem() + "|" + pNF.getCfop());
 									nf.adicionaProdutoNota(prod);
+									if(!daoProd.listaTodos().contains(insereProdutosProprios(pNF, idEmp, idEst))){
+										produtos.add(insereProdutosProprios(pNF, idEmp, idEst));
+									}
+									
 								}
 								retorno.add(nf);
 							}
@@ -256,7 +300,7 @@ public class ImportaEfdIcms {
 				redz.setIdEmp(idEmp);
 				redz.setIdEst(idEst);
 				redz.setIdPai(lote);
-				redz.setId_ecf(dao.buscaPorNumFab(equip.getNumSerieFabECF()).getId());
+				//redz.setId_ecf(dao.buscaPorNumFab(equip.getNumSerieFabECF()).getId());
 				redz.setNumCOO(leitor.getRegsC400().get(i).getRegsC405().get(z).getNumCOOFin());
 				redz.setPosicaoCRO(leitor.getRegsC400().get(i).getRegsC405().get(z).getPosicaoCRO());
 				redz.setPosicaoRDZ(leitor.getRegsC400().get(i).getRegsC405().get(z).getPosicaoRDZ());
@@ -381,6 +425,9 @@ public class ImportaEfdIcms {
 
 						listaProdutos.add(p.getCodItem());
 						retorno.add(item);
+						if(!daoProd.listaTodos().contains(insereProdutosProprios(p, idEmp, idEst))){
+							produtos.add(insereProdutosProprios(p, idEmp, idEst));
+						}
 					}
 
 				}
@@ -422,4 +469,77 @@ public class ImportaEfdIcms {
 		return id;
 	}
 	
+	 public Produto insereProdutosSped(Reg0200 prod , Long idEmp, Long idEst) {
+	    	Produto p = new Produto();
+	 
+			p.setIdEmp(idEmp);
+			p.setIdEst(idEst);
+			p.setCodUtilizEstab(prod.getCodItem());
+			p.setDescricao(prod.getDescrItem());
+			p.setUnidadedeMedidaPadrao(prod.getUnidInv());
+			p.setNcm(prod.getCodNcm());
+			p.setCodigodeBarras(prod.getCodBarra());
+            
+			
+			listaProdutos.add(prod.getCodItem());
+				
+			
+			
+	    	return p;
+	}
+	 
+	private OutrasUnid insereOutUndMedidas(LeitorEfdIcms leitor, OutrasUnid outUnd,int i,int x ,Long idPaiEmp, Long idPaiEst) {
+		
+	    outUnd.setIdPaiEmp(idPaiEmp);
+	    outUnd.setIdPaiEst(idPaiEst);
+	    
+	    outUnd.setIdPai(idPaiReg0200(leitor.getRegs0200().get(i).getOutrasUndMedidas().get(x).getCodItem(),idPaiEmp,idPaiEst));
+	    
+	    outUnd.setUndMed(leitor.getRegs0200().get(i).getOutrasUndMedidas().get(x).getUndConv());
+	    outUnd.setUndEquivPadrao(leitor.getRegs0200().get(i).getOutrasUndMedidas().get(x).getFatConv());
+		
+		return outUnd;
+	}
+	
+	public Long idPaiReg0200(String codItem,Long idPaiEmp,Long idPaiEst)  {
+		Long id = 0L;
+		try {
+			if(daoProd.getMpProdutos(idPaiEmp, idPaiEst).get(codItem) != null) {
+				id = daoProd.getMpProdutos(idPaiEmp,idPaiEst).get(codItem).getId();
+			}
+		}catch (Exception e) {
+			
+		}		
+		return id;
+	}
+
+
+	
+	 
+	 public Produto insereProdutosProprios(com.leetor4.model.nfe.Produtos prod , Long idEmp, Long idEst) {
+	    	Produto p = new Produto();
+	 
+			p.setIdEmp(idEmp);
+			p.setIdEst(idEst);
+			p.setCodUtilizEstab(prod.getCodItem());
+			p.setDescricao(prod.getDescricao());
+			p.setUnidadedeMedidaPadrao(prod.getUndComercial());
+			p.setNcm(prod.getNcm());
+			p.setCodigodeBarras(prod.getCodEanTrib());
+
+			listaProdutos.add(prod.getCodItem());
+				
+			
+			
+	    	return p;
+	 }
+
+
+	public List<Produto> getProdutos() {
+		  List<Produto> novoRetorno = produtos.stream().distinct().collect(Collectors.toList());
+		return novoRetorno;
+	}
+	 
+	 
+	 
 }

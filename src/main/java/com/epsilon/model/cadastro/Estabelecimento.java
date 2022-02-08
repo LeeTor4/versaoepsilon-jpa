@@ -53,6 +53,8 @@ public class Estabelecimento implements Serializable{
 	@JoinColumn(name="est_id")
 	private List<Produto> produtos = new ArrayList<Produto>();
 	
+	
+	
 	@OneToMany(cascade = CascadeType.ALL)
 	@OnDelete(action = OnDeleteAction.CASCADE)
 	@JoinColumn(name="est_id")
@@ -63,7 +65,7 @@ public class Estabelecimento implements Serializable{
 
 	}
 
-	public Estabelecimento( String cnpj, String nome, String nmFantasia,
+	public Estabelecimento(String cnpj, String nome, String nmFantasia,
 			Endereco end, Empresa emp) {
 		super();
 
@@ -155,6 +157,8 @@ public class Estabelecimento implements Serializable{
 	public void adicionaProduto(Produto produto) {
 		this.produtos.add(produto);
 	}
+	
+	
 	
 	public List<LoteImportacaoSpedFiscal> getLote() {
 		return lotes;
