@@ -5,12 +5,11 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import javax.persistence.NoResultException;
-
 import com.epsilon.dao.MetadadosDB;
 import com.epsilon.dao.cadastro.LoteImportacaoSpedFiscalDao;
 import com.epsilon.dao.cadastro.ProdutoDao;
 import com.epsilon.dao.movimentacao.EquipamentoCFeDao;
+import com.epsilon.dao.movimentacao.HistoricoItensDao;
 import com.epsilon.dao.movimentacao.ItensMovDiarioCFeDao;
 import com.epsilon.dao.movimentacao.NotaFiscalDao;
 import com.epsilon.dao.movimentacao.ReducaoZDao;
@@ -19,13 +18,12 @@ import com.epsilon.model.cadastro.LoteImportacaoSpedFiscal;
 import com.epsilon.model.cadastro.OutrasUnid;
 import com.epsilon.model.cadastro.Produto;
 import com.epsilon.model.movimentacao.EquipamentoCFe;
+import com.epsilon.model.movimentacao.HistoricoItens;
 import com.epsilon.model.movimentacao.ItensMovDiarioCFe;
 import com.epsilon.model.movimentacao.NotaFiscal;
-import com.epsilon.model.movimentacao.ProdutoNotaFiscal;
 import com.epsilon.model.movimentacao.ReducaoZ;
 
-import modulos.efdicms.entidades.Reg0200;
-import modulos.efdicms.entidades.Reg0220;
+
 import modulos.efdicms.manager.LeitorEfdIcms;
 
 public class Importacao {
@@ -50,8 +48,9 @@ public class Importacao {
 		ReducaoZDao rdzDao = new ReducaoZDao();
 		EquipamentoCFeDao cfeDao = new EquipamentoCFeDao();
 		ItensMovDiarioCFeDao itensCfeDao = new  ItensMovDiarioCFeDao();
+		HistoricoItensDao histDao = new HistoricoItensDao();
 		
-		String ano = "2019";
+		String ano = "2020";
 		String emp = "SELLENE";
 		String estab = "MEGADIET";
 		String cnpj  = "05329222000419";
@@ -143,10 +142,17 @@ public class Importacao {
 		
 		List<NotaFiscal>   notas1 =   imp.getNotasFiscaisTerceiros(leitor,1L,2L, leitor.incLoteImportacao(id0000));
 		List<NotaFiscal>   notas2 =   imp.getNotasFiscaisProprios(leitor,x.toString(),1L,2L, leitor.incLoteImportacao(id0000));
-		List<EquipamentoCFe> equipCfes = imp.getEquipamentosCFe(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
 		List<ReducaoZ> reducoes = imp.getReducoes(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
+		
+		List<EquipamentoCFe> equipCfes = imp.getEquipamentosCFe(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
 		List<ItensMovDiarioCFe> itensCfes =   imp.getItensCFe(leitor, x.toString(), 1L,2L, leitor.incLoteImportacao(id0000));
 		
+		List<HistoricoItens> hist1 = imp.getHistoricoItens1(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
+		List<HistoricoItens> hist2 = imp.getHistoricoItens2(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
+		List<HistoricoItens> hist3 = imp.getHistoricoItens3(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
+
+		
+		//imp.getSaldoItensPorLote(leitor, null, null, idH005);
 		
 		
 		if(!loteDao.listaTodos().contains(loteImportacao)){
@@ -182,6 +188,24 @@ public class Importacao {
 			}
 			for(ItensMovDiarioCFe cfe : itensCfes){
 				itensCfeDao.adiciona(cfe);
+			}
+			
+			for (HistoricoItens h1 : hist1) {
+				if (h1 != null) {
+					histDao.adiciona(h1);
+				}
+			}
+			
+			for (HistoricoItens h2 : hist2) {
+				if (h2 != null) {
+					histDao.adiciona(h2);
+				}
+			}
+			
+			for (HistoricoItens h3 : hist3) {
+				if (h3 != null) {
+					histDao.adiciona(h3);
+				}
 			}
 			
 		}else {

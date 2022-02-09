@@ -23,7 +23,7 @@ public class ItensMovDiarioCFe implements Serializable{
 	private Long id;
 	private Long idPaiEmp;
 	private Long idPaiEst;
-	@Column(name="equip_id")
+	//@Column(name="equip_id")
 	private Long idPai;
 	private String numCFe;
 	private String numItem;

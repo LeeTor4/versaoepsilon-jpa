@@ -39,8 +39,8 @@ public class EquipamentoCFe implements Serializable{
 	private String    docFinal;
 	
 	@OneToMany(cascade = CascadeType.ALL)
-	@OnDelete(action = OnDeleteAction.CASCADE)
-	@JoinColumn(name="equip_id")
+	//@OnDelete(action = OnDeleteAction.CASCADE)
+	//@JoinColumn(name="equip_id")
 	private List<ItensMovDiarioCFe> itensDiarioCFe = new ArrayList<ItensMovDiarioCFe>();
 	
 	public Long getId() {
