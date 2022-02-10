@@ -50,7 +50,7 @@ public class Importacao {
 		ItensMovDiarioCFeDao itensCfeDao = new  ItensMovDiarioCFeDao();
 		HistoricoItensDao histDao = new HistoricoItensDao();
 		
-		String ano = "2020";
+		String ano = "2019";
 		String emp = "SELLENE";
 		String estab = "MEGADIET";
 		String cnpj  = "05329222000419";
@@ -105,8 +105,8 @@ public class Importacao {
 	    Path p12 = Paths.get("E:\\EMPRESAS".concat("\\").concat(emp).concat("\\").concat(estab).concat("\\SPED").concat("\\").concat(ano).concat("\\").concat(anomes12));
 	    
 
-	    Path p = p2;
-		Path x = x2;
+	    Path p = p3;
+		Path x = x3;
 		
 		LeitorEfdIcms leitor = new LeitorEfdIcms();
 		
@@ -126,7 +126,7 @@ public class Importacao {
 		idC405 = banco.getIncremento("tb_reducaoz");
 		idC420 = banco.getIncremento("tb_totaisparcrdz");
 		idC860 = banco.getIncremento("tb_equipamentocfe");
-		//idH005 = banco.getIncremento(em, "tb_reducaoz");
+		//idH005 = banco.getIncremento("tb_reducaoz");
 
 		leitor.leitorSpedFiscal(p,leitor.incLoteImportacao(id0000),
 				leitor.incProd(id0200),leitor.incNFe(idC100),leitor.incRDZ(idC405),leitor.incTotParcRdz(idC420),

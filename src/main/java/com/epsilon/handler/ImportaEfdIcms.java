@@ -583,6 +583,10 @@ public class ImportaEfdIcms {
 		
 		int dia10 = 10;
 		ExecutorService ex1 = Executors.newCachedThreadPool();
+		for (int i = 0; i < leitor.getRegsC400().size(); i++) {
+            leituraEcf_ate_dia_10(ex1, leitor, idEmp, idEst, lote, i,dia10, retorno);
+		}
+
 		for (RegC860 regC860 : leitor.getRegsC860()) {			
 			
 			 leituraCFe_ate_dia_10(leitor, lote, parseDocXML, f, ex1, regC860,dia10,retorno);
@@ -599,6 +603,11 @@ public class ImportaEfdIcms {
 		List<HistoricoItens>  retorno = new ArrayList<HistoricoItens>();
 		int dia20 = 20;
 		ExecutorService ex2 = Executors.newCachedThreadPool();
+		
+		for (int i = 0; i < leitor.getRegsC400().size(); i++) {
+            leituraEcf_entre_dia_10_a_20(ex2, leitor, idEmp, idEst, lote, i,dia20, retorno);
+		}
+		
 		for (RegC860 regC860 : leitor.getRegsC860()) {	
 			 leituraCFe_entre_dia_10_a_20(leitor, lote, parseDocXML, f, ex2, regC860,dia20,retorno);			
 		}		
@@ -615,6 +624,9 @@ public class ImportaEfdIcms {
 		List<HistoricoItens>  retorno = new ArrayList<HistoricoItens>();
 		int dia30 = 31;
 		ExecutorService ex3 = Executors.newCachedThreadPool();
+		for (int i = 0; i < leitor.getRegsC400().size(); i++) {
+            leituraEcf_entre_dia_20_a_31(ex3, leitor, idEmp, idEst, lote, i,dia30, retorno);
+		}
 		for (RegC860 regC860 : leitor.getRegsC860()) {				
 			  leituraCFe_entre_dia_20_a_31(leitor, lote, parseDocXML, f, ex3, regC860,dia30,retorno);
 		}
@@ -622,51 +634,164 @@ public class ImportaEfdIcms {
 		return retorno;
 	}
 	
-	private void leituraCFe_ate_dia_10(LeitorEfdIcms leitor, Long lote, ParseDocXML parseDocXML, File f,
-			ExecutorService ex, RegC860 regC860,int dia,List<HistoricoItens>  retorno) {
-			  if(regC860.getDtEmissao().getDayOfMonth()  <= dia) {
-				
-					try {
-						for (DocumentoFiscalEltronico doc : parseDocXML.validaTipoDeParseNFE(f)) {
-							if (regC860.getId() == idPaiEquipCFe(doc.getIdent().getNumDoc(), leitor)) {
+	private void leituraEcf_ate_dia_10(ExecutorService ex, LeitorEfdIcms leitor,Long idEmp,
+			Long idEst,Long lote,int i,int dia,List<HistoricoItens>  retorno) {
+		
+		for (int z = 0; z < leitor.getRegsC400().get(i).getRegsC405().size(); z++) {
+			
+			if(leitor.getRegsC400().get(i).getRegsC405().get(z).getDtDoc().getDayOfMonth() <= dia) {
+				for (int l = 0; l < leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().size(); l++) {
+					for (int m = 0; m < leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l)
+							.getRegsC425().size(); m++) {
+	
+						if (insereReducoes(leitor, lote, i, z, l, m) != null) {
+							
+							CallableHistItensECFs hist = new CallableHistItensECFs(leitor, i, z, l, m, lote, dia);
+							Future<HistoricoItens> submit = ex.submit(hist);
+							try {
+								retorno.add(submit.get());
+							    System.out.println(submit.get().getDtDoc().getDayOfMonth() + "|" + leitor.getRegsC400().get(i).getRegsC405().get(z).getPosicaoRDZ());
+
+							} catch (InterruptedException e) {
 								
-								for (Produtos p : doc.getProds()) {
-									if (doc.getIdent().getModeloDoc().equals("59")) {
-										
-										if(insereCFes(leitor,regC860 ,f, p, doc, lote).getDtDoc().getDayOfMonth() <= dia) {
-											//retorno.add(insereCFes(leitor,regC860, file, p, doc, lote));
-											CallableHistItensCFes hist = new CallableHistItensCFes(leitor,regC860 ,f, p, doc, lote, dia);
-											//System.out.println(insereCFes(leitor,regC860 ,f, p, doc, lote).getDtDoc().getDayOfMonth());
-											Future<HistoricoItens> submit = ex.submit(hist);
-											try {
-												retorno.add(submit.get());
-											    System.out.println(submit.get().getDtDoc().getDayOfMonth() + "|" + regC860.getNumSerieEquipSat());
-
-											} catch (InterruptedException e) {
-												
-												e.printStackTrace();
-											} catch (ExecutionException e) {
-												
-												e.printStackTrace();
-											}
-										}
-
-										
-									}
-								}
+								e.printStackTrace();
+							} catch (ExecutionException e) {
+								
+								e.printStackTrace();
 							}
 						}
-
-					} catch (IOException e) {
-					
-						e.printStackTrace();
-					} catch (JAXBException e) {
-						
-						e.printStackTrace();
+	
 					}
-					
-			  }	
+				}
+			}
+
+		}
+		
 	}
+
+	private void leituraEcf_entre_dia_10_a_20(ExecutorService ex, LeitorEfdIcms leitor,Long idEmp,
+			Long idEst,Long lote,int i,int dia,List<HistoricoItens>  retorno) {
+		
+		for (int z = 0; z < leitor.getRegsC400().get(i).getRegsC405().size(); z++) {
+			
+			if(leitor.getRegsC400().get(i).getRegsC405().get(z).getDtDoc().getDayOfMonth() > 10
+					&& leitor.getRegsC400().get(i).getRegsC405().get(z).getDtDoc().getDayOfMonth() <= dia) {
+				
+				for (int l = 0; l < leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().size(); l++) {
+					for (int m = 0; m < leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l)
+							.getRegsC425().size(); m++) {
+	
+						if (insereReducoes(leitor, lote, i, z, l, m) != null) {
+							
+							CallableHistItensECFs hist = new CallableHistItensECFs(leitor, i, z, l, m, lote, dia);
+							Future<HistoricoItens> submit = ex.submit(hist);
+							try {
+								retorno.add(submit.get());
+							    System.out.println(submit.get().getDtDoc().getDayOfMonth() + "|" + leitor.getRegsC400().get(i).getRegsC405().get(z).getPosicaoRDZ());
+
+							} catch (InterruptedException e) {
+								
+								e.printStackTrace();
+							} catch (ExecutionException e) {
+								
+								e.printStackTrace();
+							}
+						}
+	
+					}
+				}
+			}
+
+		}
+		
+	}
+	
+	private void leituraEcf_entre_dia_20_a_31(ExecutorService ex, LeitorEfdIcms leitor,Long idEmp,
+			Long idEst,Long lote,int i,int dia,List<HistoricoItens>  retorno) {
+		
+		for (int z = 0; z < leitor.getRegsC400().get(i).getRegsC405().size(); z++) {
+			
+			if(leitor.getRegsC400().get(i).getRegsC405().get(z).getDtDoc().getDayOfMonth() > 20
+					&& leitor.getRegsC400().get(i).getRegsC405().get(z).getDtDoc().getDayOfMonth() <= dia) {
+				
+				for (int l = 0; l < leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().size(); l++) {
+					for (int m = 0; m < leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l)
+							.getRegsC425().size(); m++) {
+	
+						if (insereReducoes(leitor, lote, i, z, l, m) != null) {
+							
+							CallableHistItensECFs hist = new CallableHistItensECFs(leitor, i, z, l, m, lote, dia);
+							Future<HistoricoItens> submit = ex.submit(hist);
+							try {
+								retorno.add(submit.get());
+							    System.out.println(submit.get().getDtDoc().getDayOfMonth() + "|" + leitor.getRegsC400().get(i).getRegsC405().get(z).getPosicaoRDZ());
+
+							} catch (InterruptedException e) {
+								
+								e.printStackTrace();
+							} catch (ExecutionException e) {
+								
+								e.printStackTrace();
+							}
+						}
+	
+					}
+				}
+			}
+
+		}
+		
+	}
+	
+	private void leituraCFe_ate_dia_10(LeitorEfdIcms leitor, Long lote, ParseDocXML parseDocXML, File f,
+			ExecutorService ex, RegC860 regC860, int dia, List<HistoricoItens> retorno) {
+		if (regC860.getDtEmissao().getDayOfMonth() <= dia) {
+
+			try {
+				for (DocumentoFiscalEltronico doc : parseDocXML.validaTipoDeParseNFE(f)) {
+					if (regC860.getId() == idPaiEquipCFe(doc.getIdent().getNumDoc(), leitor)) {
+
+						for (Produtos p : doc.getProds()) {
+							if (doc.getIdent().getModeloDoc().equals("59")) {
+
+								if (insereCFes(leitor, regC860, f, p, doc, lote).getDtDoc().getDayOfMonth() <= dia) {
+									// retorno.add(insereCFes(leitor,regC860, file, p, doc, lote));
+									CallableHistItensCFes hist = new CallableHistItensCFes(leitor, regC860, f, p, doc,
+											lote, dia);
+									// System.out.println(insereCFes(leitor,regC860 ,f, p, doc,
+									// lote).getDtDoc().getDayOfMonth());
+									Future<HistoricoItens> submit = ex.submit(hist);
+									try {
+										retorno.add(submit.get());
+										System.out.println(submit.get().getDtDoc().getDayOfMonth() + "|"
+												+ regC860.getNumSerieEquipSat());
+
+									} catch (InterruptedException e) {
+
+										e.printStackTrace();
+									} catch (ExecutionException e) {
+
+										e.printStackTrace();
+									}
+								}
+
+							}
+						}
+					}
+				}
+
+			} catch (IOException e) {
+
+				e.printStackTrace();
+			} catch (JAXBException e) {
+
+				e.printStackTrace();
+			}
+
+		}
+	}
+	
+	
 	
 	private void leituraCFe_entre_dia_10_a_20(LeitorEfdIcms leitor, Long lote, ParseDocXML parseDocXML, File f,
 			ExecutorService ex, RegC860 regC860,int dia,List<HistoricoItens>  retorno) {
@@ -920,6 +1045,40 @@ public class ImportaEfdIcms {
 		return retorno;
 	}
 	
+	public HistoricoItens insereReducoes(LeitorEfdIcms leitor,Long lote, int i, int z, int l, int m) {
+		EquipamentoEcfDao dao = new EquipamentoEcfDao();
+		HistoricoItens retorno = new HistoricoItens();
+
+							
+		retorno.setIdPaiLote(lote);
+		retorno.setCodMod(leitor.getRegsC400().get(i).getCodModelo());
+		retorno.setIdPai(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getIdPai()-1);
+		retorno.setEmpresa(leitor.getRegs0000().get(0).getCnpj());
+		retorno.setOperacao("S");
+		retorno.setCodSitDoc("");
+		retorno.setNumItem("");
+		retorno.setEcfCx(dao.buscaPorNumFab(leitor.getRegsC400().get(i).getNumSerieFabECF()).getNumECF());
+		retorno.setDtDoc(leitor.getRegsC400().get(i).getRegsC405().get(z).getDtDoc());
+		retorno.setCodItem(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getCodItem());
+		retorno.setQtde(BigDecimal.valueOf(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getQtd()));
+		retorno.setUnd(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getUnd());
+		retorno.setVlUnit(BigDecimal.valueOf(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getVlItem()/leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getQtd()));
+		retorno.setVlLiq(BigDecimal.valueOf(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getVlItem()));
+		retorno.setVlBruto(BigDecimal.valueOf(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getVlItem()));
+		retorno.setCfop(leitor.getMpC490().get(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getIdPaiRedZ()).getCfop());
+		retorno.setCst(leitor.getMpC490().get(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getIdPaiRedZ()).getCstIcms());
+		if(leitor.getMpProdTerc().get(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getCodItem()) != null) {
+			retorno.setDescricao(leitor.getMpProdTerc().get(leitor.getRegsC400().get(i).getRegsC405().get(z).getRegsC420().get(l).getRegsC425().get(m).getCodItem()).getDescrItem());
+		}
+		retorno.setNumDoc(leitor.getRegsC400().get(i).getRegsC405().get(z).getNumCOOFin());
+		retorno.setAliqIcms(BigDecimal.valueOf(0.0));
+		retorno.setDesconto(BigDecimal.valueOf(0.0));
+		retorno.setChaveDoc("");
+		retorno.setNome("");
+		retorno.setCpfCnpj("");
+										
+		return retorno;
+	}
 	public HistoricoItens insereCFes(LeitorEfdIcms leitor,RegC860 regC860,File file,Produtos p,DocumentoFiscalEltronico doc, Long lote) {
 		
 		HistoricoItens retorno = new HistoricoItens();
