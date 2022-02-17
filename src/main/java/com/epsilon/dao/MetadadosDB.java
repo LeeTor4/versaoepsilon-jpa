@@ -50,7 +50,7 @@ public class MetadadosDB implements Serializable{
 	public  Long getIncLoteImp() {
 		EntityManager em = JPAUtil.getEntityManager();
 		Long id = 0L;
-		String sql = "SELECT '1' as id ,AUTO_INCREMENT incremento FROM information_schema.tables WHERE table_schema = 'versaoepsilon' and table_name = 'tb_importspedfiscal'";
+		String sql = "select coalesce( max( id ), 0) as id from tb_importspedfiscal";
 		
 		Query query =  em.createNativeQuery(sql, MetadadosDB.class);
 		

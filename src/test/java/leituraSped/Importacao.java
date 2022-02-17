@@ -14,6 +14,7 @@ import com.epsilon.dao.movimentacao.ItensMovDiarioCFeDao;
 import com.epsilon.dao.movimentacao.NotaFiscalDao;
 import com.epsilon.dao.movimentacao.ReducaoZDao;
 import com.epsilon.handler.ImportaEfdIcms;
+import com.epsilon.handler.ImportaEfdIcms2;
 import com.epsilon.model.cadastro.LoteImportacaoSpedFiscal;
 import com.epsilon.model.cadastro.OutrasUnid;
 import com.epsilon.model.cadastro.Produto;
@@ -50,7 +51,7 @@ public class Importacao {
 		ItensMovDiarioCFeDao itensCfeDao = new  ItensMovDiarioCFeDao();
 		HistoricoItensDao histDao = new HistoricoItensDao();
 		
-		String ano = "2019";
+		String ano = "2021";
 		String emp = "SELLENE";
 		String estab = "MEGADIET";
 		String cnpj  = "05329222000419";
@@ -105,12 +106,13 @@ public class Importacao {
 	    Path p12 = Paths.get("E:\\EMPRESAS".concat("\\").concat(emp).concat("\\").concat(estab).concat("\\SPED").concat("\\").concat(ano).concat("\\").concat(anomes12));
 	    
 
-	    Path p = p3;
-		Path x = x3;
+	    Path p = p1;
+		Path x = x1;
 		
 		LeitorEfdIcms leitor = new LeitorEfdIcms();
 		
 		ImportaEfdIcms imp = new ImportaEfdIcms();
+		ImportaEfdIcms2 imp2 = new ImportaEfdIcms2();
 		
 		Long id0000 = 0L;
 		Long id0200 = 0L;
@@ -120,37 +122,38 @@ public class Importacao {
 		Long idC860 = 0L;
 		Long idH005 = 0L;
 		
-		id0000 = banco.getIncremento("tb_importspedfiscal");
-		id0200 = banco.getIncremento( "tb_produto");
-		idC100 = banco.getIncremento("tb_notafiscal");
-		idC405 = banco.getIncremento("tb_reducaoz");
-		idC420 = banco.getIncremento("tb_totaisparcrdz");
-		idC860 = banco.getIncremento("tb_equipamentocfe");
+		id0000 = (banco.getIncremento("tb_importspedfiscal")==null ? 0 : banco.getIncremento("tb_importspedfiscal"));
+		//id0200 = banco.getIncremento( "tb_produto");
+		idC100 = (banco.getIncremento("tb_notafiscal")==null ? 0 : banco.getIncremento("tb_notafiscal"));
+		idC405 = (banco.getIncremento("tb_reducaoz")==null ? 0 : banco.getIncremento("tb_reducaoz"));
+		idC420 = (banco.getIncremento("tb_totaisparcrdz")==null ? 0 : banco.getIncremento("tb_totaisparcrdz"));
+		idC860 = (banco.getIncremento("tb_equipamentocfe")==null ? 0 : banco.getIncremento("tb_equipamentocfe"));
 		//idH005 = banco.getIncremento("tb_reducaoz");
 
 		leitor.leitorSpedFiscal(p,leitor.incLoteImportacao(id0000),
-				leitor.incProd(id0200),leitor.incNFe(idC100),leitor.incRDZ(idC405),leitor.incTotParcRdz(idC420),
+				leitor.incNFe(idC100),leitor.incRDZ(idC405),leitor.incTotParcRdz(idC420),
 				leitor.incTotEquipCFe(idC860), 0L );
 
-		LoteImportacaoSpedFiscal loteImportacao = imp.getLoteImportacao(leitor, 1L, 2L);
+		LoteImportacaoSpedFiscal loteImportacao = imp2.getLoteImportacao(leitor, 1L, 2L);
 
 		
 		
-		List<Produto> produtosSped = imp.getProdutosSped(leitor,1L,2L);
-		produtosSped.addAll(imp.getProdutos());
+		List<Produto> produtosSped = imp2.getProdutosSped(leitor,1L,2L);
+		produtosSped.addAll(imp2.getProdutos());
 		List<Produto> collectProdutos = produtosSped.stream().distinct().collect(Collectors.toList());
 		
-		List<NotaFiscal>   notas1 =   imp.getNotasFiscaisTerceiros(leitor,1L,2L, leitor.incLoteImportacao(id0000));
-		List<NotaFiscal>   notas2 =   imp.getNotasFiscaisProprios(leitor,x.toString(),1L,2L, leitor.incLoteImportacao(id0000));
-		List<ReducaoZ> reducoes = imp.getReducoes(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
+		List<NotaFiscal>   notas1 =   imp2.getNotasFiscaisTerceiros(leitor,1L,2L, leitor.incLoteImportacao(id0000));
+		List<NotaFiscal>   notas2 =   imp2.getNotasFiscaisProprios(leitor,x.toString(),1L,2L, leitor.incLoteImportacao(id0000));
+		List<ReducaoZ> reducoes = imp2.getReducoes(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
 		
-		List<EquipamentoCFe> equipCfes = imp.getEquipamentosCFe(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
-		List<ItensMovDiarioCFe> itensCfes =   imp.getItensCFe(leitor, x.toString(), 1L,2L, leitor.incLoteImportacao(id0000));
+		List<EquipamentoCFe> equipCfes = imp2.getEquipamentosCFe(leitor, 1L,2L, leitor.incLoteImportacao(id0000));
+		List<ItensMovDiarioCFe> itensCfes =   imp2.getItensCFe(leitor, x.toString(), 1L,2L, leitor.incLoteImportacao(id0000));
 		
-		List<HistoricoItens> hist1 = imp.getHistoricoItens1(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
-		List<HistoricoItens> hist2 = imp.getHistoricoItens2(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
-		List<HistoricoItens> hist3 = imp.getHistoricoItens3(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
+//		List<HistoricoItens> hist1 = imp.getHistoricoItens1(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
+//		List<HistoricoItens> hist2 = imp.getHistoricoItens2(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
+//		List<HistoricoItens> hist3 = imp.getHistoricoItens3(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
 
+		List<HistoricoItens> hist4 = imp2.getHistoricoItensGeral(leitor, x.toString(),1L,2L,leitor.incLoteImportacao(id0000));
 		
 		//imp.getSaldoItensPorLote(leitor, null, null, idH005);
 		
@@ -174,39 +177,42 @@ public class Importacao {
 
 			}
 		
-			for(NotaFiscal nf :  notas1){			
-				nfDao.adiciona(nf);
-			}		
-	        for(NotaFiscal nf :  notas2){			
-				nfDao.adiciona(nf);
-			}
-	        for(ReducaoZ rdz : reducoes){
-	        	rdzDao.adiciona(rdz);
-	        }
-			for(EquipamentoCFe equipCfe : equipCfes) {
-				cfeDao.adiciona(equipCfe);
-			}
-			for(ItensMovDiarioCFe cfe : itensCfes){
-				itensCfeDao.adiciona(cfe);
-			}
+//			for(NotaFiscal nf :  notas1){			
+//				nfDao.adiciona(nf);
+//			}		
+//	        for(NotaFiscal nf :  notas2){			
+//				nfDao.adiciona(nf);
+//			}
+//	        for(ReducaoZ rdz : reducoes){
+//	        	rdzDao.adiciona(rdz);
+//	        }
+//	        
+//	        for(EquipamentoCFe equipCfe : equipCfes) {
+//				cfeDao.adiciona(equipCfe);
+//			}
+//
+//			for(ItensMovDiarioCFe cfe : itensCfes){
+//				itensCfeDao.adiciona(cfe);
+//			}
+
 			
-			for (HistoricoItens h1 : hist1) {
+			for (HistoricoItens h1 : hist4) {
 				if (h1 != null) {
 					histDao.adiciona(h1);
 				}
 			}
 			
-			for (HistoricoItens h2 : hist2) {
-				if (h2 != null) {
-					histDao.adiciona(h2);
-				}
-			}
-			
-			for (HistoricoItens h3 : hist3) {
-				if (h3 != null) {
-					histDao.adiciona(h3);
-				}
-			}
+//			for (HistoricoItens h2 : hist2) {
+//				if (h2 != null) {
+//					histDao.adiciona(h2);
+//				}
+//			}
+//			
+//			for (HistoricoItens h3 : hist3) {
+//				if (h3 != null) {
+//					histDao.adiciona(h3);
+//				}
+//			}
 			
 		}else {
 			System.out.println("Lote já importado!!!");

@@ -28,7 +28,7 @@ public class leituras {
 	    ParseDocXML parseDocXML = new ParseDocXML();
 		File f = new File(x11.toString());
 		LeitorEfdIcms leitor = new LeitorEfdIcms();
-		leitor.leitorSpedFiscal(p11,0L,0L,0L,0L,0L,0L, 0L );
+		leitor.leitorSpedFiscal(p11,0L,0L,0L,0L,0L, 0L );
 		
 		
 		

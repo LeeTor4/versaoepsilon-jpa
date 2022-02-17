@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.persistence.CacheRetrieveMode;
+import javax.persistence.CacheStoreMode;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.Query;
@@ -25,6 +27,7 @@ public class ProdutoDao {
 	
 	public ProdutoDao() {
 		this.dao = new DAO<Produto>(em, Produto.class);
+		
 	}
 	
 	public void adiciona(Produto t) {

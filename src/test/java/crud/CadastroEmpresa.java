@@ -203,6 +203,23 @@ public class CadastroEmpresa {
 		ecf2_loja06.setNumECF("2");
 		ecfsMegafarma.add(ecf2_loja06);
 
+		
+		EquipamentoECF ecf3_loja06 = new EquipamentoECF();
+		ecf3_loja06.setCodModDocFiscal("2D");
+		ecf3_loja06.setModeloEquip("ECF"); 
+		ecf3_loja06.setNumSerieFabECF("BE090910100010021907");
+		ecf3_loja06.setNumECF("001");
+		ecfsMegafarma.add(ecf3_loja06);
+		
+		EquipamentoECF ecf4_loja06 = new EquipamentoECF();
+		ecf4_loja06.setCodModDocFiscal("2D");
+		ecf4_loja06.setModeloEquip("ECF"); 
+		ecf4_loja06.setNumSerieFabECF("BE05117561000010533");
+		ecf4_loja06.setNumECF("002");
+		ecfsMegafarma.add(ecf4_loja06);
+		
+		
+		
 		loja3.setEquipEcf(ecfsLoja03);
 		mega.setEquipEcf(ecfsMegadiet);
 		megafarma.setEquipEcf(ecfsMegafarma);

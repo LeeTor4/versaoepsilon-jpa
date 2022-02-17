@@ -21,8 +21,8 @@ public class HistoricoItensDao {
 	
 	
 	public void adiciona(HistoricoItens t) {
-		//dao.adiciona(t);
-		dao.adicionarBatch(t);
+		dao.adiciona(t);
+		//dao.adicionarBatch(t);
 	}
 
 	public void remove(HistoricoItens t) {

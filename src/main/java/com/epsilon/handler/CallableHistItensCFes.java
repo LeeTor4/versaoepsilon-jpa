@@ -11,7 +11,7 @@ import modulos.efdicms.entidades.RegC860;
 import modulos.efdicms.manager.LeitorEfdIcms;
 
 
-public class CallableHistItensCFes implements Callable<HistoricoItens >{
+public class CallableHistItensCFes implements Callable<HistoricoItens>{
 
 	private ImportaEfdIcms importacoes = new ImportaEfdIcms();
 	private LeitorEfdIcms leitor;
@@ -20,10 +20,11 @@ public class CallableHistItensCFes implements Callable<HistoricoItens >{
 	private File f;
 	private DocumentoFiscalEltronico doc;
 	private Long lote;
-	private int dia;
+	private int pDia;
+	private int uDia;
 	
 	public CallableHistItensCFes(LeitorEfdIcms leitor, RegC860 regC860, File f,Produtos p, 
-			DocumentoFiscalEltronico doc, Long lote,int dia) {
+			DocumentoFiscalEltronico doc, Long lote,int pDia, int uDia) {
 		
 		this.leitor = leitor;
 		this.p = p;
@@ -31,14 +32,16 @@ public class CallableHistItensCFes implements Callable<HistoricoItens >{
 		this.f = f;
 		this.doc = doc;
 		this.lote = lote;
-		this.dia = dia;
+		this.pDia = pDia;
+		this.uDia = uDia;
 	}
 	
 	@Override
 	public HistoricoItens call() throws Exception {
 		HistoricoItens retorno = null;
-		if(importacoes.insereCFes(leitor,regC860 ,f, p, doc, lote).getDtDoc().getDayOfMonth() <= dia) {
-			 retorno = importacoes.insereCFes(leitor,regC860 ,f, p, doc, lote);
+		if(importacoes.insereHistCFes(leitor,regC860 ,f, p, doc, lote).getDtDoc().getDayOfMonth() >= pDia
+				&& importacoes.insereHistCFes(leitor,regC860 ,f, p, doc, lote).getDtDoc().getDayOfMonth() < uDia) {
+			 retorno = importacoes.insereHistCFes(leitor,regC860 ,f, p, doc, lote);
 		}
 		//importacoes.insereNotasProprias(leitor,p, doc, lote);
 		return retorno;

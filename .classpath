@@ -34,9 +34,9 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/chico/OneDrive/Área de Trabalho/parse_xml.jar"/>
-	<classpathentry kind="lib" path="C:/Users/chico/OneDrive/Área de Trabalho/modulos_sped.jar"/>
 	<classpathentry kind="lib" path="C:/Users/chico/OneDrive/Área de Trabalho/consumir-cnpj-endereco.jar"/>
 	<classpathentry kind="lib" path="C:/Users/chico/Downloads/gson-2.8.5.jar"/>
+	<classpathentry kind="lib" path="C:/Users/chico/OneDrive/Área de Trabalho/parse_xml.jar"/>
+	<classpathentry kind="lib" path="C:/Users/chico/OneDrive/Área de Trabalho/modulos_sped.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
